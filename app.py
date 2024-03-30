@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QtGui import QKeyEvent, QTextCursor, QTextCharFormat, QColor, QClipboard, QGuiApplication
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 import sys
 from spellCheck import correction
+import time
 
 class MyGUI(QMainWindow):
     def __init__(self):
@@ -11,16 +12,48 @@ class MyGUI(QMainWindow):
         super(MyGUI, self).__init__()
         uic.loadUi('UI.ui', self)
         self.show()
+
+        # event handlers
         self.text_edit.textChanged.connect(self.text_edit_change)
+        self.copy_btn.clicked.connect(self.copyText)
+        self.check_btn.clicked.connect(self.checkSpell)
+
         # Menonaktifkan event filter jika ada
         self.text_edit.installEventFilter(self)
         self.text_correction.installEventFilter(self)
-        self.text_edit.setFontPointSize(self.fontSize)        
+        self.text_edit.setFontPointSize(self.fontSize)                
+        
+    def copyText(self):
+        clipboard = QApplication.clipboard()
+        wordCorrect = self.text_correction.toPlainText()
+        textCopy = clipboard.setText(wordCorrect)
+
+        self.copy_btn.setText("teks berhasil disalin")
+        self.defaultStyle = self.copy_btn.styleSheet()
+        self.copy_btn.setStyleSheet("background-color: #37a36a; color:white; height:50;font-weight:500;")
+  
+        # set timer
+        self.timer = QTimer(self)
+        self.timer.start(1000)
+        self.timer.timeout.connect(self.resetCopyBtn)
+
+    def checkSpell(self):
+        self.checkSpell()
+        pass
 
     def text_edit_change(self):
         self.text_edit.setFontPointSize(self.fontSize)
-        # self.checkSpell()
 
+    def resetCopyBtn(self):    
+        self.timer.stop()
+        self.copy_btn.setStyleSheet(self.defaultStyle)
+        self.copy_btn.setText("Salin Teks")
+        
+
+    def close_notification(self):
+        print("nutup")
+        self.notification.close()
+        self.timer.stop()  
 
     def eventFilter(self, obj, event):
         if event.type() == QKeyEvent.KeyPress:

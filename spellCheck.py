@@ -1,9 +1,11 @@
 import re
 from collections import Counter
 
+kamus = 'autocorrect.txt'
+
 def words(text): return re.findall(r'\w+', text.lower())
 
-allWord = Counter(words(open('katadasar.txt').read()))
+allWord = Counter(words(open(kamus).read()))
 
 def wordProbability(word, N=sum(allWord.values())):
     return allWord[word] / N
@@ -13,8 +15,8 @@ def correction(word):
 
 def candidates(word):
     # return (known([word]) or [word])
-    return (known([word]) or known(basicEdit(word)) or [word])
-    # return (known([word]) or known(basicEdit(word)) or known(doubleEdit(word)) or [word])
+    # return (known([word]) or known(basicEdit(word)) or [word])
+    return (known([word]) or known(basicEdit(word)) or known(doubleEdit(word)) or [word])
 
 def known(words):
     return set(w for w in words if w in allWord)
