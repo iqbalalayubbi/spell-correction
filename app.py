@@ -3,14 +3,15 @@ from PyQt5 import uic
 from PyQt5.QtGui import QKeyEvent, QTextCursor, QTextCharFormat, QColor, QClipboard, QGuiApplication
 from PyQt5.QtCore import Qt, QTimer
 import sys
+import os
 from spellCheck import correction
-import time
 
 class MyGUI(QMainWindow):
     def __init__(self):
         self.fontSize = 18
+        uiPath = resource_path('UI.ui')
         super(MyGUI, self).__init__()
-        uic.loadUi('UI.ui', self)
+        uic.loadUi(uiPath, self)
         self.show()
 
         # event handlers
@@ -114,13 +115,16 @@ class MyGUI(QMainWindow):
                 cursor.mergeCharFormat(correct_format)
             else:
                 cursor = document.find(word["word"], cursor)
-                cursor.mergeCharFormat(wrong_format)      
+                cursor.mergeCharFormat(wrong_format)
 
-    # while not cursor.isNull():
-    #             cursor = document.find(word, cursor)
-    #             if cursor.isNull():
-    #                 break
-    #             cursor.mergeCharFormat(wrong_format)                                          
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path) 
 
 def main():
     app = QApplication(sys.argv)

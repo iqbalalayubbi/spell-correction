@@ -1,11 +1,23 @@
 import re
 from collections import Counter
+import sys, os
 
-kamus = 'autocorrect.txt'
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
+kamusPath = resource_path('autocorrect.txt')
 
 def words(text): return re.findall(r'\w+', text.lower())
 
-allWord = Counter(words(open(kamus).read()))
+allWord = Counter(words(open(kamusPath).read()))
 
 def wordProbability(word, N=sum(allWord.values())):
     return allWord[word] / N
