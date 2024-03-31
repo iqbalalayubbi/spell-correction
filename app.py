@@ -4,7 +4,10 @@ from PyQt5.QtGui import QKeyEvent, QTextCursor, QTextCharFormat, QColor, QClipbo
 from PyQt5.QtCore import Qt, QTimer
 import sys
 import os
+import re
+
 from spellCheck import correction
+from shortWord import shortWord
 
 class MyGUI(QMainWindow):
     def __init__(self):
@@ -61,7 +64,10 @@ class MyGUI(QMainWindow):
             self.keyPressEvent(event)
         if event.type() == QKeyEvent.KeyRelease:
             if event.key() == Qt.Key.Key_Space:
+                self.changeCursorColor()
                 self.checkSpell()
+            if event.key() == Qt.Key.Key_Backspace:
+                self.changeCursorColor()
         return super().eventFilter(obj, event)
 
     def keyPressEvent(self, event):
@@ -69,11 +75,36 @@ class MyGUI(QMainWindow):
             # print("Key Pressed:", event.text())
             pass
 
+    def changeCursorColor(self):
+        cursor = self.text_edit.textCursor()
+        format_cursor = QTextCharFormat()
+        format_cursor.setForeground(Qt.black)
+        cursor.mergeCharFormat(format_cursor)
+        self.text_edit.setTextCursor(cursor)
+            
+    def containNonAlfa(self, word):
+        patternNonAlfa = r'[^\w\s]'
+        isFullWord = re.findall(patternNonAlfa, word)
+        return len(isFullWord) > 0    
+
+    def getWord(self, word):
+        patternWord = r'[a-zA-Z]+'
+        if (len(re.findall(patternWord, word)) > 0):
+            return re.findall(patternWord, word)[0]
+        return 0
+    
+    def getNonAlfa(self, word):
+        patternNonAlfa = r'[^\w\s]'
+        return re.findall(patternNonAlfa, word)[0]
+
     def checkSpell(self):
         words = self.text_edit.toPlainText()
-        words = words.split()
+        words = map(lambda w: w.lower(), words.split())        
         allWord = []
 
+        # print(list(words))
+
+        # formatting cursor
         document = self.text_edit.document()
         cursor = QTextCursor(document)
         cursor.movePosition(QTextCursor.Start)
@@ -89,24 +120,63 @@ class MyGUI(QMainWindow):
         correctionWords = []
 
         for word in words:
-            correctWord = correction(word)
-            allWord.append(correctWord)
+            correctWord = correction(word)            
 
-            if (word != correctWord):                                        
-                wrongWord = {
-                    "word": word,
-                    "isCorrect": False,
-                    "correct" : correctWord
-                }
-                correctionWords.append(wrongWord)
-            else:
+            if (self.getWord(word) == 0):
                 correctWord = {
-                    "word": word,
-                    "isCorrect": True,
-                    "correct" : word
+                        "word": word,
+                        "isCorrect": True,
+                        "correct" : word
                 }
                 correctionWords.append(correctWord)
+                allWord.append(word)                
+                continue
 
+            # when teks contain non alfa numeric
+            isNonAlfa = False                
+            if (self.containNonAlfa(word)):
+                isNonAlfa = True                
+                rightWord = correction(word)+self.getNonAlfa(word)
+                correctWord = {
+                        "word": rightWord,
+                        "isCorrect": True,
+                        "correct" : rightWord
+                    }
+                correctionWords.append(correctWord)
+                allWord.append(rightWord)                
+                continue
+            
+            isShortWord = False
+            for w in shortWord:
+                if w["short"] == word:
+                    word = w["actual"]
+                    correctWord = {
+                        "word": word,
+                        "isCorrect": True,
+                        "correct" : word
+                    }
+                    correctionWords.append(correctWord)
+                    isShortWord = True
+                    allWord.append(word)
+                    break
+                        
+            
+            if (not isShortWord and not isNonAlfa):
+                allWord.append(correctWord)
+                if (word != correctWord):
+                    wrongWord = {
+                        "word": word,
+                        "isCorrect": False,
+                        "correct" : correctWord
+                    }
+                    correctionWords.append(wrongWord)
+                else:
+                    correctWord = {
+                        "word": word,
+                        "isCorrect": True,
+                        "correct" : word
+                    }
+                    correctionWords.append(correctWord)                    
         self.text_correction.setText(' '.join(allWord))        
         
         for word in correctionWords:            
@@ -116,7 +186,7 @@ class MyGUI(QMainWindow):
             else:
                 cursor = document.find(word["word"], cursor)
                 cursor.mergeCharFormat(wrong_format)
-
+        
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
