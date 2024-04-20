@@ -5,3 +5,5 @@ dist
 build
 app.spec
 output
+read.txt
+write.txt

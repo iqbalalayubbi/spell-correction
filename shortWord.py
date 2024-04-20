@@ -1,5 +1,9 @@
 shortWord = [
     {
+        "short" : "tp",
+        "actual" : "tapi"
+    },
+    {
         "short" : "yg",
         "actual" : "yang"
     },

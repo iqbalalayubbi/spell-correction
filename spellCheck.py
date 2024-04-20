@@ -1,6 +1,7 @@
 import re
 from collections import Counter
 import sys, os
+import numpy as np
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -37,9 +38,13 @@ def basicEdit(word):
     letters = 'abcdefghijklmnopqrstuvwxyz'
     splits = [(word[:i], word[i:]) for i in range(len(word) + 1)]
     deletes = [L + R[1:] for L, R in splits if R]
+    # makan -> akan, mkan
     transposes = [L + R[1] + R[0] + R[2:] for L, R in splits if len(R)>1]
+    # makan -> amkan, mkaan
     replaces = [L + c + R[1:] for L, R in splits for c in letters]
-    inserts = [L + c + R for L, R in splits for c in letters]    
+    # makan -> bakac
+    inserts = [L + c + R for L, R in splits for c in letters]
+    # makan -> amakan, makana
     return set(deletes + transposes + replaces + inserts)
 
 def doubleEdit(word):
